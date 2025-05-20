@@ -244,129 +244,134 @@
   </style>
 </head>
 <body>
-  <div id="topBar">
-    <span id="homeIcon" onclick="location.reload()">🏠</span>
-    <span id="category">Architecture pictionary</span>
+<div id="topBar">
+  <span id="homeIcon" onclick="location.reload()">🏠</span>
+  <span id="category">Architecture pictionary</span>
+</div>
+<div id="centerInputWrapper">
+  <div id="wordInputArea">
+    <select id="langSelect" style="font-size:18px;padding:6px 10px;border-radius:6px;margin-left:8px;">
+      <option value="ar">عربي</option>
+      <option value="en">English</option>
+    </select>
+    <input id="secretWord" type="text" placeholder="أدخل الكلمة...">
+    <button id="startBtn" onclick="onStartGame()">ابدأ اللعبة</button>
   </div>
-  <div id="centerInputWrapper">
-    <div id="wordInputArea">
-      <select id="langSelect" style="font-size:18px;padding:6px 10px;border-radius:6px;margin-left:8px;">
-        <option value="ar">عربي</option>
-        <option value="en">English</option>
-      </select>
-      <input id="secretWord" type="text" placeholder="أدخل الكلمة...">
-      <button id="startBtn" onclick="onStartGame()">ابدأ اللعبة</button>
-    </div>
+</div>
+<div id="wordDisplay" style="display:none"></div>
+<div id="mainGameArea" style="display:none">
+  <div id="svgArea">
+    <!-- SVG will be injected here -->
   </div>
-  <div id="wordDisplay" style="display:none"></div>
-  <div id="mainGameArea" style="display:none">
-    <div id="svgArea">
-      <!-- SVG will be injected here -->
-    </div>
-    <div id="letters"></div>
-  </div>
-  <div id="status" style="display:none"></div>
-  <div id="soundStatus" style="display:none"></div>
-  <div id="timerBar" style="display:none">
-    <div id="timerBarInner"></div>
-    <span id="timerText">الوقت المتبقي: <span id="timer">120</span> ثانية</span>
-  </div>
-  <audio id="winSound" src="./win.mp3" controls style="display:none"></audio>
-  <audio id="loseSound" src="./lose.mp3" controls style="display:none"></audio>
-  <script>
-    // --- Game Variables ---
-    let word = "";
-    let guessed = [];
-    let tries = 6;
-    let timer = 120;
-    let timerInterval = null;
-    let gameStarted = false;
-    let winSoundLoaded = false;
-    let loseSoundLoaded = false;
-    let lang = 'ar';
+  <div id="letters"></div>
+</div>
+<div id="status" style="display:none"></div>
+<div id="soundStatus" style="display:none"></div>
+<div id="timerBar" style="display:none">
+  <div id="timerBarInner"></div>
+  <span id="timerText">الوقت المتبقي: <span id="timer">120</span> ثانية</span>
+</div>
+<audio id="winSound" src="./win.mp3" controls style="display:none"></audio>
+<audio id="loseSound" src="./lose.mp3" controls style="display:none"></audio>
+<script>
+  // --- Game Variables ---
+  let word = "";
+  let guessed = [];
+  let tries = 6;
+  let timer = 120;
+  let timerInterval = null;
+  let gameStarted = false;
+  let winSoundLoaded = false;
+  let loseSoundLoaded = false;
+  let lang = 'ar';
 
-    const arabicLetters = [..."اأإءبتثجحخدذرزسشصضطظعغفقكلمنهوىية"];
-    const englishLetters = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
-    const hangmanParts = [
-      'head', 'body', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
-    ];
+  const arabicLetters = [..."اأإءبتثجحخدذرزسشصضطظعغفقكلمنهوىيةة"];
+  const englishLetters = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+  const hangmanParts = [
+    'head', 'body', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
+  ];
 
-    // Sound loading check
-    window.onload = function() {
-      // Hide all game elements except input
-      document.getElementById('centerInputWrapper').style.display = 'flex';
-      document.getElementById('wordDisplay').style.display = 'none';
-      document.getElementById('mainGameArea').style.display = 'none';
-      document.getElementById('status').style.display = 'none';
-      document.getElementById('soundStatus').style.display = 'none';
-      document.getElementById('timerBar').style.display = 'none';
-      // Sound check
-      const winAudio = document.getElementById('winSound');
-      const loseAudio = document.getElementById('loseSound');
-      winAudio.oncanplaythrough = () => { winSoundLoaded = true; updateSoundStatus(); };
-      winAudio.onerror = () => { winSoundLoaded = false; updateSoundStatus(); };
-      loseAudio.oncanplaythrough = () => { loseSoundLoaded = true; updateSoundStatus(); };
-      loseAudio.onerror = () => { loseSoundLoaded = false; updateSoundStatus(); };
-      updateSoundStatus();
-    };
-    function updateSoundStatus() {
-      const statusDiv = document.getElementById('soundStatus');
-      if (!winSoundLoaded || !loseSoundLoaded) {
-        statusDiv.innerText = '⚠️ لم يتم تحميل أصوات الفوز أو الخسارة. تأكد من وجود الملفات win.mp3 و lose.mp3 في نفس المجلد.';
-      } else {
-        statusDiv.innerText = '';
-      }
+  // Sound loading check
+  window.onload = function() {
+    // Hide all game elements except input
+    document.getElementById('centerInputWrapper').style.display = 'flex';
+    document.getElementById('wordDisplay').style.display = 'none';
+    document.getElementById('mainGameArea').style.display = 'none';
+    document.getElementById('status').style.display = 'none';
+    document.getElementById('soundStatus').style.display = 'none';
+    document.getElementById('timerBar').style.display = 'none';
+    // Sound check
+    const winAudio = document.getElementById('winSound');
+    const loseAudio = document.getElementById('loseSound');
+    winAudio.oncanplaythrough = () => { winSoundLoaded = true; updateSoundStatus(); };
+    winAudio.onerror = () => { winSoundLoaded = false; updateSoundStatus(); };
+    loseAudio.oncanplaythrough = () => { loseSoundLoaded = true; updateSoundStatus(); };
+    loseAudio.onerror = () => { loseSoundLoaded = false; updateSoundStatus(); };
+    updateSoundStatus();
+  };
+  function updateSoundStatus() {
+    const statusDiv = document.getElementById('soundStatus');
+    if (!winSoundLoaded || !loseSoundLoaded) {
+      statusDiv.innerText = '⚠️ لم يتم تحميل أصوات الفوز أو الخسارة. تأكد من وجود الملفات win.mp3 و lose.mp3 في نفس المجلد.';
+    } else {
+      statusDiv.innerText = '';
+    }
+  }
+
+  function onStartGame() {
+    lang = document.getElementById('langSelect').value;
+    const input = document.getElementById("secretWord").value.trim();
+    if (!input) {
+      alert(lang === 'ar' ? "الرجاء إدخال كلمة عربية صحيحة فقط" : "Please enter a valid English word");
+      return;
+    }
+    if (lang === 'ar' && /[^ء-ي\s]/.test(input)) {
+      alert("الرجاء إدخال كلمة عربية صحيحة فقط");
+      return;
     }
 
-    function onStartGame() {
-      lang = document.getElementById('langSelect').value;
-      const input = document.getElementById("secretWord").value.trim();
-      if (!input) {
-        alert(lang === 'ar' ? "الرجاء إدخال كلمة عربية صحيحة فقط" : "Please enter a valid English word");
-        return;
-      }
-      if (lang === 'ar' && /[^ء-ي\s]/.test(input)) {
-        alert("الرجاء إدخال كلمة عربية صحيحة فقط");
-        return;
-      }
-      if (lang === 'en' && /[^a-zA-Z\s]/.test(input)) {
-        alert("Please enter a valid English word only");
-        return;
-      }
-      word = input.replace(/\s+/g, ' ').trim();
-      document.getElementById("centerInputWrapper").style.display = "none";
-      document.getElementById("wordDisplay").style.display = "inline-block";
-      document.getElementById("mainGameArea").style.display = "flex";
-      document.getElementById("status").style.display = "block";
-      document.getElementById("soundStatus").style.display = "block";
-      document.getElementById("timerBar").style.display = "block";
-      startGame();
-    }
 
-    function startGame() {
-      guessed = [];
-      tries = 6;
-      timer = 120;
-      gameStarted = true;
-      const statusDiv = document.getElementById("status");
-      statusDiv.innerText = "";
-      statusDiv.style.color = lang === 'ar' ? '#2bb6d0' : '#2bb6d0';
-      displayWord();
-      createLetterButtons();
-      drawHangman(0);
-      startTimer();
-    }
 
-    function displayWord() {
-      let display = '';
-      let allGuessed = true;
-      for (let i = 0; i < word.length; i++) {
-        const letter = word[i];
-        if (letter === ' ') {
-          display += '   '; // 3 spaces between words
-        } else if (
-          (lang === 'ar' && guessed.includes(letter)) ||
-          (lang === 'en' && guessed.map(l => l.toLowerCase()).includes(letter.toLowerCase()))
+    if (lang === 'en' && /[^a-zA-Z\s]/.test(input)) {
+      alert("Please enter a valid English word only");
+      return;
+    }
+    word = input.replace(/\s+/g, ' ').trim();
+    document.getElementById("centerInputWrapper").style.display = "none";
+    document.getElementById("wordDisplay").style.display = "inline-block";
+    document.getElementById("mainGameArea").style.display = "flex";
+    document.getElementById("status").style.display = "block";
+    document.getElementById("soundStatus").style.display = "block";
+    document.getElementById("timerBar").style.display = "block";
+    startGame();
+  }
+
+  function startGame() {
+    guessed = [];
+    tries = 6;
+    timer = 120;
+    gameStarted = true;
+    const statusDiv = document.getElementById("status");
+    statusDiv.innerText = "";
+    statusDiv.style.color = lang === 'ar' ? '#2bb6d0' : '#2bb6d0';
+    displayWord();
+    createLetterButtons();
+    drawHangman(0);
+    startTimer();
+  }
+
+  function displayWord() {
+    let display = '';
+    let allGuessed = true;
+    // Split the word into words (by space), then process each word
+    const wordsArr = word.split(' ');
+    for (let w = 0; w < wordsArr.length; w++) {
+      const wordPart = wordsArr[w];
+      for (let i = 0; i < wordPart.length; i++) {
+        const letter = wordPart[i];
+        if (
+                (lang === 'ar' && guessed.includes(letter)) ||
+                (lang === 'en' && guessed.map(l => l.toLowerCase()).includes(letter.toLowerCase()))
         ) {
           display += letter + ' ';
         } else {
@@ -374,106 +379,118 @@
           allGuessed = false;
         }
       }
-      document.getElementById("wordDisplay").innerText = display.trim();
-      const statusDiv = document.getElementById("status");
-      if (allGuessed) {
-        statusDiv.innerText = lang === 'ar' ? "🎉 مبروك! لقد ربحت!" : "🎉 Congratulations! You won!";
-        statusDiv.style.color = '#2ecc40'; // green
-        if(winSoundLoaded) document.getElementById("winSound").play();
-        disableLetters();
-        stopTimer();
+      if (w < wordsArr.length - 1) {
+        display += '    '; // 4 spaces as a visible separator between words
       }
     }
-
-    function createLetterButtons() {
-      const container = document.getElementById("letters");
-      container.innerHTML = "";
-      const letters = lang === 'ar' ? arabicLetters : englishLetters;
-      const lettersPerRow = 5;
-      for (let i = 0; i < letters.length; i += lettersPerRow) {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'letters-row';
-        for (let j = i; j < i + lettersPerRow && j < letters.length; j++) {
-          const btn = document.createElement("button");
-          btn.innerText = letters[j];
-          btn.onclick = () => guessLetter(letters[j], btn);
-          rowDiv.appendChild(btn);
-        }
-        container.appendChild(rowDiv);
-      }
+    document.getElementById("wordDisplay").innerText = display.trim();
+    const wordDisplayDiv = document.getElementById("wordDisplay");
+    if (lang === 'en') {
+      wordDisplayDiv.style.direction = 'ltr';
+      wordDisplayDiv.style.textAlign = 'left';
+    } else {
+      wordDisplayDiv.style.direction = 'rtl';
+      wordDisplayDiv.style.textAlign = 'right';
     }
+    const statusDiv = document.getElementById("status");
+    if (allGuessed) {
+      statusDiv.innerText = lang === 'ar' ? "🎉 مبروك! لقد ربحت!" : "🎉 Congratulations! You won!";
+      statusDiv.style.color = '#2ecc40'; // green
+      if(winSoundLoaded) document.getElementById("winSound").play();
+      disableLetters();
+      stopTimer();
+    }
+  }
 
-    function guessLetter(letter, btn) {
-      btn.disabled = true;
-      if (
-        (lang === 'ar' && word.includes(letter)) ||
-        (lang === 'en' && word.toLowerCase().includes(letter.toLowerCase()))
-      ) {
-        guessed.push(letter);
-      } else {
-        tries--;
-        drawHangman(6 - tries);
+  function createLetterButtons() {
+    const container = document.getElementById("letters");
+    container.innerHTML = "";
+    const letters = lang === 'ar' ? arabicLetters : englishLetters;
+    const lettersPerRow = 6; // 6 columns for a neat rectangle
+    for (let i = 0; i < letters.length; i += lettersPerRow) {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'letters-row';
+      for (let j = i; j < i + lettersPerRow && j < letters.length; j++) {
+        const btn = document.createElement("button");
+        btn.innerText = letters[j];
+        btn.onclick = () => guessLetter(letters[j], btn);
+        rowDiv.appendChild(btn);
       }
-      displayWord();
-      const statusDiv = document.getElementById("status");
-      if (tries <= 0) {
-        statusDiv.innerText = (lang === 'ar' ? `❌ خسرت! الكلمة كانت: ${word}` : `❌ You lost! The word was: ${word}`);
-        statusDiv.style.color = '#b22222'; // red
+      container.appendChild(rowDiv);
+    }
+  }
+
+  function guessLetter(letter, btn) {
+    btn.disabled = true;
+    if (
+            (lang === 'ar' && word.includes(letter)) ||
+            (lang === 'en' && word.toLowerCase().includes(letter.toLowerCase()))
+    ) {
+      guessed.push(letter);
+    } else {
+      tries--;
+      drawHangman(6 - tries);
+    }
+    displayWord();
+    const statusDiv = document.getElementById("status");
+    if (tries <= 0) {
+      statusDiv.innerText = (lang === 'ar' ? `❌ خسرت! الكلمة كانت: ${word}` : `❌ You lost! The word was: ${word}`);
+      statusDiv.style.color = '#b22222'; // red
+      if(loseSoundLoaded) document.getElementById("loseSound").play();
+      disableLetters();
+      stopTimer();
+    }
+  }
+
+  function disableLetters() {
+    const buttons = document.querySelectorAll('#letters button');
+    buttons.forEach(btn => btn.disabled = true);
+  }
+
+  function startTimer() {
+    document.getElementById("timer").innerText = timer;
+    updateTimerBar();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timer--;
+      document.getElementById("timer").innerText = timer;
+      updateTimerBar();
+      if (timer <= 0) {
+        document.getElementById("status").innerText = (lang === 'ar' ? `❌ انتهى الوقت! الكلمة كانت: ${word}` : `❌ Time's up! The word was: ${word}`);
         if(loseSoundLoaded) document.getElementById("loseSound").play();
         disableLetters();
         stopTimer();
       }
-    }
+    }, 1000);
+  }
 
-    function disableLetters() {
-      const buttons = document.querySelectorAll('#letters button');
-      buttons.forEach(btn => btn.disabled = true);
-    }
+  function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+  }
 
-    function startTimer() {
-      document.getElementById("timer").innerText = timer;
-      updateTimerBar();
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timer--;
-        document.getElementById("timer").innerText = timer;
-        updateTimerBar();
-        if (timer <= 0) {
-          document.getElementById("status").innerText = (lang === 'ar' ? `❌ انتهى الوقت! الكلمة كانت: ${word}` : `❌ Time's up! The word was: ${word}`);
-          if(loseSoundLoaded) document.getElementById("loseSound").play();
-          disableLetters();
-          stopTimer();
-        }
-      }, 1000);
-    }
+  function updateTimerBar() {
+    const percent = Math.max(0, timer / 120);
+    document.getElementById('timerBarInner').style.width = (percent * 100) + '%';
+  }
 
-    function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-    }
-
-    function updateTimerBar() {
-      const percent = Math.max(0, timer / 120);
-      document.getElementById('timerBarInner').style.width = (percent * 100) + '%';
-    }
-
-    // Draw classic hangman SVG
-    function drawHangman(stage) {
-      // stage: 0 to 6
-      let svg = `<svg width='300' height='320'>
+  // Draw classic hangman SVG
+  function drawHangman(stage) {
+    // stage: 0 to 6
+    let svg = `<svg width='300' height='320'>
         <line x1='30' y1='300' x2='270' y2='300' stroke='#222' stroke-width='6' />
         <line x1='70' y1='300' x2='70' y2='40' stroke='#222' stroke-width='6' />
         <line x1='70' y1='40' x2='180' y2='40' stroke='#222' stroke-width='6' />
         <line x1='180' y1='40' x2='180' y2='80' stroke='#222' stroke-width='6' />
       `;
-      if (stage > 0) svg += `<circle cx='180' cy='105' r='25' stroke='#222' stroke-width='5' fill='#fff' />`; // head
-      if (stage > 1) svg += `<line x1='180' y1='130' x2='180' y2='210' stroke='#222' stroke-width='5' />`; // body
-      if (stage > 2) svg += `<line x1='180' y1='150' x2='150' y2='180' stroke='#222' stroke-width='5' />`; // left arm
-      if (stage > 3) svg += `<line x1='180' y1='150' x2='210' y2='180' stroke='#222' stroke-width='5' />`; // right arm
-      if (stage > 4) svg += `<line x1='180' y1='210' x2='150' y2='260' stroke='#222' stroke-width='5' />`; // left leg
-      if (stage > 5) svg += `<line x1='180' y1='210' x2='210' y2='260' stroke='#222' stroke-width='5' />`; // right leg
-      svg += `</svg>`;
-      document.getElementById('svgArea').innerHTML = svg;
-    }
-  </script>
+    if (stage > 0) svg += `<circle cx='180' cy='105' r='25' stroke='#222' stroke-width='5' fill='#fff' />`; // head
+    if (stage > 1) svg += `<line x1='180' y1='130' x2='180' y2='210' stroke='#222' stroke-width='5' />`; // body
+    if (stage > 2) svg += `<line x1='180' y1='150' x2='150' y2='180' stroke='#222' stroke-width='5' />`; // left arm
+    if (stage > 3) svg += `<line x1='180' y1='150' x2='210' y2='180' stroke='#222' stroke-width='5' />`; // right arm
+    if (stage > 4) svg += `<line x1='180' y1='210' x2='150' y2='260' stroke='#222' stroke-width='5' />`; // left leg
+    if (stage > 5) svg += `<line x1='180' y1='210' x2='210' y2='260' stroke='#222' stroke-width='5' />`; // right leg
+    svg += `</svg>`;
+    document.getElementById('svgArea').innerHTML = svg;
+  }
+</script>
 </body>
 </html>
